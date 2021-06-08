@@ -12,7 +12,7 @@ DATA = Path(__file__).parent / 'sequences'
 author_regex = re.compile(r'_([a-zA-Z\s\.\-]+)_')
 
 
-def run():
+def parse():
     authors = set()
     edges = []
     for file in DATA.files('*.json'):
@@ -38,5 +38,5 @@ def run():
 
 
 if __name__ == '__main__':
-    graph = run()
+    graph = parse()
     print(get_graph_stats(graph))

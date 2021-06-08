@@ -118,8 +118,9 @@ def mif(G: networkx.Graph, F: Set[N]):
     if len(ccs_nodes) > 1:
         tot = 0
         for cc_nodes in ccs_nodes:
-            cc = g.subgraph(cc_nodes)
-            tot += mif(cc, F)
+            cc = G.subgraph(cc_nodes)
+            F_i = F.intersection(cc_nodes)
+            tot += mif(cc, F_i)
         print('returning', tot)
         return tot
     if not is_indipendent(G, F):  # preprocessing 2
@@ -156,6 +157,7 @@ def mif(G: networkx.Graph, F: Set[N]):
     neighbors_t = set(G.neighbors(t))
     if V_wo_F == neighbors_t:
         G_p3 = build_graph_proposition_3(G, F, t, neighbors_t)
+        print(G_p3.nodes)
         I = networkx.maximal_independent_set(G_p3)
         print('case 5')
         print('returning', len(I) + len(F))
@@ -186,8 +188,11 @@ def mif(G: networkx.Graph, F: Set[N]):
         F1.add(neigh_gen_degree_gr_4)
         G1 = G.copy()
         G1.remove_node(neigh_gen_degree_gr_4)
+        F2 = F.copy()
+        if neigh_gen_degree_gr_4 in F2:
+            F2.remove(neigh_gen_degree_gr_4)
         print('case 7')
-        return max(mif(G, F1), mif(G1, F))
+        return max(mif(G, F1), mif(G1, F2))
     del neigh_gen_degree_gr_4
     if neigh_gen_degree_eq_2:  # case 8
         nodes_triangle = find_triangle_nodes(G, neigh_gen_degree_eq_2)
@@ -245,6 +250,4 @@ def minimum_feedback_vertex_set(g: networkx.Graph):
 if __name__ == '__main__':
     n = 10
     g = networkx.Graph([(i % n, (i + 1) % n) for i in range(n)])
-    networkx.draw(g)
-    plt.savefig('simple_graph.png')
     print(minimum_feedback_vertex_set(g))
