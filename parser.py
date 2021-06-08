@@ -5,6 +5,8 @@ from path import Path
 import re
 import json
 
+from graph_stats import get_graph_stats
+
 FIELD = 'formula'
 DATA = Path(__file__).parent / 'sequences'
 author_regex = re.compile(r'_([a-zA-Z\s\.\-]+)_')
@@ -29,10 +31,12 @@ def run():
                         for field_match in author_regex.finditer(field_value):
                             field_author = field_match.group(1).lower()
                             edges.append((author, field_author))
+            else:
+                print('skip', file, 'because key "author" is not present')
     graph = networkx.Graph(edges)
     return graph
 
 
 if __name__ == '__main__':
     graph = run()
-    print(graph.edges)
+    print(get_graph_stats(graph))
