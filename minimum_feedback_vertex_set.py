@@ -62,11 +62,13 @@ def get_max_degree(G: networkx.Graph) -> int:
 
 def build_graph_proposition_3(G, F, t, neighbors_t):
     G_n_t: networkx.Graph = G.subgraph(neighbors_t)
+    F_wo_t = F.copy(); F_wo_t.remove(t)
     for (u, v) in combinations(G_n_t.nodes, 2):
         if not G_n_t.has_edge(u, v):
             neigh_u = set(G_n_t.neighbors(u))
             neigh_v = set(G_n_t.neighbors(v))
-            if len(neigh_v.intersection(neigh_u)) >= 1:  # i.e. have at least a common neighbor
+            common_neigh = neigh_v.intersection(neigh_u)
+            if len(common_neigh.intersection(F_wo_t)) >= 1:  # i.e. have at least a common neighbor
                 G_n_t.add_edge(u, v)
     return G_n_t
 
