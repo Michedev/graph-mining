@@ -30,7 +30,8 @@ def parse():
                         field_value = ''.join(row[FIELD])
                         for field_match in author_regex.finditer(field_value):
                             field_author = field_match.group(1).lower()
-                            edges.append((author, field_author))
+                            if author != field_author:
+                                edges.append((author, field_author))
             else:
                 print('skip', file, 'because key "author" is not present')
     num_map = dict()
