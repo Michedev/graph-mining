@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-
+from itertools import chain
 import networkx
 from path import Path
 import re
@@ -33,6 +33,13 @@ def parse():
                             edges.append((author, field_author))
             else:
                 print('skip', file, 'because key "author" is not present')
+    num_map = dict()
+    c = 0
+    for n in chain(*edges):
+        if n not in num_map:
+            num_map[n] = c
+            c += 1
+    edges = [(num_map[u], num_map[v]) for u, v in edges]
     graph = networkx.Graph(edges)
     return graph
 

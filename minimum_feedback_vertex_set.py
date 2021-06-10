@@ -61,7 +61,7 @@ def get_max_degree(G: nx.Graph) -> int:
 
 
 def build_graph_proposition_3(G, F, t, neighbors_t):
-    G_n_t: nx.Graph = G.subgraph(neighbors_t)
+    G_n_t: nx.Graph = G.subgraph(neighbors_t).copy()
     for (u, v) in combinations(G_n_t.nodes, 2):
         if not G_n_t.has_edge(u, v):
             neigh_u = set(G_n_t.neighbors(u))
@@ -172,7 +172,7 @@ def mif(G: nx.Graph, F: Set[N], verbose=False):
         G1.remove_node(v)
         if verbose: print('case 3')
         return max(mif(G, F1), mif(G1, F))
-    t = random.choice(list(F))  # set active vertex
+    t = random.choice(list(F.intersection(G.nodes)))  # set active vertex
     V_wo_F = set(G.nodes).difference(F)
     neighbors_t = set(G.neighbors(t))
     if V_wo_F == neighbors_t:
@@ -209,11 +209,8 @@ def mif(G: nx.Graph, F: Set[N], verbose=False):
         F1.add(neigh_gen_degree_gr_4)
         G1 = G.copy()
         G1.remove_node(neigh_gen_degree_gr_4)
-        F2 = F.copy()
-        if neigh_gen_degree_gr_4 in F2:
-            F2.remove(neigh_gen_degree_gr_4)
         if verbose: print('case 7')
-        return max(mif(G, F1), mif(G1, F2))
+        return max(mif(G, F1), mif(G1, F))
     del neigh_gen_degree_gr_4
     if neigh_gen_degree_eq_2:  # case 8
         w1, w2 = nodes_gen_neightbors[neigh_gen_degree_eq_2]
@@ -224,29 +221,28 @@ def mif(G: nx.Graph, F: Set[N], verbose=False):
         F2 = F.copy()
         F2.add(w1); F2.add(w2)
         return max(mif(G, F1), mif(G1, F2))
-    v = find_v_case_9(G, neighbors_t)  # case 9
-    other_nodes = list(find_square_nodes(G, v))
+    v, w1, w2_w3 = find_v_case_9(G, neighbors_t, nodes_gen_neightbors)  # case 9
     F1 = F.copy();
     F1.add(v)
     G1 = G.copy()
     G1.remove_node(v)
-    w1 = other_nodes[0]
-    w2, w3 = other_nodes[1:]
     F2 = F.copy();
     F2.add(w1)
     G2 = G.copy();
     G2.subgraph([v, w1])
     F3 = F.copy();
-    F3.add(w2)
-    F3.add(w3)
+    F3.update(w2_w3)
     return max(mif(G, F1), mif(G1, F2), mif(G2, F3))
 
 
-def find_v_case_9(G, neighbors_t):
-    for neighbor_t in neighbors_t:  # case 9
-        for neighbor_neighbor_t in G.neighbors(neighbor_t):
-            if neighbor_neighbor_t not in neighbors_t:
-                return neighbor_neighbor_t
+def find_v_case_9(G, neighbors_t: Set[N], nodes_gen_neigh_t: dict):
+    for v in neighbors_t:  # case 9
+        v_gen_neights = nodes_gen_neigh_t[v]
+        for gn_v in v_gen_neights:
+            if gn_v not in neighbors_t:
+                copy_v_gen_neights = list(v_gen_neights)
+                copy_v_gen_neights.remove(gn_v)
+                return v, gn_v, copy_v_gen_neights
     raise Exception("V not found")
 
 
