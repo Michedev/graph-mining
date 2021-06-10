@@ -136,34 +136,35 @@ def mif(G: nx.Graph, F: Set[N], verbose=False):
     """
     ccs_nodes = list(nx.connected_components(G))  # preprocessing 1
     if len(ccs_nodes) > 1:
-        tot = 0
+        result = set()
         for cc_nodes in ccs_nodes:
             cc = G.subgraph(cc_nodes)
             F_i = F.intersection(cc_nodes)
-            tot += mif(cc, F_i)
-        if verbose: print('returning', tot)
-        return tot
+            result = result.union(mif(cc, F_i))
+        if verbose: print('returning', result)
+        return result
     if not is_indipendent(G, F):  # preprocessing 2
         G1 = G.copy()
         for cc_nodes in nx.connected_components(G1.subgraph(F)):
             if cc_nodes and len(cc_nodes) > 1:  # i.e. is not trivial
                 v_t = random.choice(list(cc_nodes))
                 G1 = id_star_(G1, cc_nodes, v_t)
+                break
         F1 = set(G1.nodes).intersection(F)
-        tot = len(F.difference(F1))
-        tot += mif(G1, F1)
-        if verbose: print('p2 - returning', tot)
-        return tot
+        result = F.difference(F1)
+        result = mif(G1, F1) - result
+        if verbose: print('p2 - returning', result)
+        return result
     if len(F) == len(G.nodes):  # case 1
         if verbose: print('case 1')
-        if verbose: print('returning', len(F))
-        return len(F)
+        if verbose: print('returning', F)
+        return F
     max_degree = get_max_degree(G)
     F_empty = len(F) == 0
     if F_empty and max_degree <= 1:  # case 2
         if verbose: print('case 2')
-        if verbose: print('returning', len(G.nodes))
-        return len(G.nodes)
+        if verbose: print('returning', G.nodes)
+        return set(G.nodes)
     elif F_empty and max_degree >= 2:  # case 3
         v = next(n for n in G.nodes if G.degree[n] >= 2)
         F1 = F.copy()
@@ -171,7 +172,7 @@ def mif(G: nx.Graph, F: Set[N], verbose=False):
         G1 = G.copy()
         G1.remove_node(v)
         if verbose: print('case 3')
-        return max(mif(G, F1), mif(G1, F))
+        return max(mif(G, F1), mif(G1, F), key=len)
     t = random.choice(list(F.intersection(G.nodes)))  # set active vertex
     V_wo_F = set(G.nodes).difference(F)
     neighbors_t = set(G.neighbors(t))
@@ -179,9 +180,10 @@ def mif(G: nx.Graph, F: Set[N], verbose=False):
         G_p3 = build_graph_proposition_3(G, F, t, neighbors_t)
         if verbose: print(G_p3.nodes)
         I = nx.maximal_independent_set(G_p3)
+        result = F.union(I)
         if verbose: print('case 5')
-        if verbose: print('returning', len(I) + len(F))
-        return len(I) + len(F)
+        if verbose: print('returning', result)
+        return result
     neighbors_t = list(G.neighbors(t))
     nodes_gen_neightbors = generalized_degree(G, F, t)
     neighs_gen_degree_leq_1 = []
@@ -210,7 +212,7 @@ def mif(G: nx.Graph, F: Set[N], verbose=False):
         G1 = G.copy()
         G1.remove_node(neigh_gen_degree_gr_4)
         if verbose: print('case 7')
-        return max(mif(G, F1), mif(G1, F))
+        return max(mif(G, F1), mif(G1, F), key=len)
     del neigh_gen_degree_gr_4
     if neigh_gen_degree_eq_2:  # case 8
         w1, w2 = nodes_gen_neightbors[neigh_gen_degree_eq_2]
@@ -220,7 +222,7 @@ def mif(G: nx.Graph, F: Set[N], verbose=False):
         G1.remove_node(neigh_gen_degree_eq_2)
         F2 = F.copy()
         F2.add(w1); F2.add(w2)
-        return max(mif(G, F1), mif(G1, F2))
+        return max(mif(G, F1), mif(G1, F2), key=len)
     v, w1, w2_w3 = find_v_case_9(G, neighbors_t, nodes_gen_neightbors)  # case 9
     F1 = F.copy();
     F1.add(v)
@@ -232,7 +234,7 @@ def mif(G: nx.Graph, F: Set[N], verbose=False):
     G2.subgraph([v, w1])
     F3 = F.copy();
     F3.update(w2_w3)
-    return max(mif(G, F1), mif(G1, F2), mif(G2, F3))
+    return max(mif(G, F1), mif(G1, F2), mif(G2, F3), key=len)
 
 
 def find_v_case_9(G, neighbors_t: Set[N], nodes_gen_neigh_t: dict):
@@ -270,7 +272,7 @@ def minimum_feedback_vertex_set(g: nx.Graph):
     :param G: graph
     :return: the cardinality of minimal feedback vertex set
     """
-    return len(g.nodes) - mif(g, set())
+    return set(g.nodes) - mif(g, set())
 
 
 if __name__ == '__main__':
