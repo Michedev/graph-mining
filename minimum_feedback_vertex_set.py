@@ -8,31 +8,41 @@ import networkx as nx
 N = Union[str, int]
 
 
-def id_(G: nx.Graph, T: Set[N], t: N, verbose=False):
+def id_(G: nx.Graph, T: Set[N], v_t: N, verbose=False):
     """
     This function represent the operation "Id" described by the paper as "the operation of contracting all edges of T
     into one vertex t and removing appeared loops."
     Paper link: https://www.cse.unsw.edu.au/~sergeg/papers/Iwpec2006.pdf
     :return: the new graph
     """
-    if verbose: print(T)
-    if verbose: print('t', t)
-    G1 = G
-    G1_T: nx.Graph = G1.subgraph(T)
-    while len(G1_T.nodes) > 1:
-        e_gen = filter(lambda e: t in e, G1_T.edges)
-        try:
-            e = next(e_gen)
-            if e[0] != t:
-                e = e[1], e[0]
-        except StopIteration:
-            e = None
-        if e is not None:
-            G1 = nx.algorithms.contracted_edge(G1, e, self_loops=False)
-            T.discard(e[1])
-            if verbose: print('discarded', e[1])
-            G1_T = G1.subgraph(T)
-    return G1
+    gx = G.copy()
+
+    tx = T.copy()
+    if v_t in tx:
+        tx = T.copy()
+        tx.remove(v_t)
+    gx.add_node(v_t)
+
+    for node in tx:
+        for edge in gx.edges(node):
+            if edge[0] == node:
+                node_2 = edge[1]
+            else:
+                node_2 = edge[0]
+            if not (node_2 in T or node_2 == v_t):
+                gx.add_edge(v_t, node_2)
+        gx.remove_node(node)
+
+    remove = set()
+    for node in gx.adj[v_t]:
+        if len(gx.adj[v_t][node]) >= 2:
+            # Using a set to remove to avoid messing up iteration of adj
+            remove.add(node)
+
+    for node in remove:
+        gx.remove_node(node)
+
+    return gx
 
 
 def id_star_(G: nx.Graph, T: Set[N], t: N):
@@ -44,15 +54,15 @@ def id_star_(G: nx.Graph, T: Set[N], t: N):
     """
 
     G1 = id_(G, T, t)
-    G1_t: nx.Graph = G1.subgraph([t] + list(G1.neighbors(t)))
-    found_edges = []
-    for e in G1_t.edges:
-        e_sorted = sorted(e)
-        if e_sorted in found_edges:  # it means it's a duplicate
-            if verbose: print('removed edge', e, "because it's a duplicate")
-            G1.remove_edge(*e)
-        else:
-            found_edges.append(e_sorted)
+    # G1_t: nx.Graph = G1.subgraph([t] + list(G1.neighbors(t)))
+    # found_edges = []
+    # for e in G1_t.edges:
+    #     e_sorted = sorted(e)
+    #     if e_sorted in found_edges:  # it means it's a duplicate
+    #         if verbose: print('removed edge', e, "because it's a duplicate")
+    #         G1.remove_edge(*e)
+    #     else:
+    #         found_edges.append(e_sorted)
     return G1
 
 
@@ -116,7 +126,7 @@ def generalized_degree(G: nx.Graph, F: Set[N], t: N):
     return result
 
 
-def mif(G: nx.Graph, F: Set[N], t: N = None, verbose=False):
+def mif(G: nx.Graph, F: Set[N], t: N = None, verbose=True):
     """
     Calculate the size of the Maximal Indipendent Forest using SOTA algorithm
     with complexity O(1.7548^n) where n is the number of nodes of the graph
