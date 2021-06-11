@@ -126,7 +126,7 @@ def generalized_degree(G: nx.Graph, F: Set[N], t: N):
     return result
 
 
-def mif(G: nx.Graph, F: Set[N], t: N = None, verbose=True):
+def mif(G: nx.Graph, F: Set[N], t: N = None, verbose=False):
     """
     Calculate the size of the Maximal Indipendent Forest using SOTA algorithm
     with complexity O(1.7548^n) where n is the number of nodes of the graph
@@ -143,7 +143,7 @@ def mif(G: nx.Graph, F: Set[N], t: N = None, verbose=True):
     :param F: The forest i.e. a set of nodes used for recursive calls. If you want to find the maximum indipendent forest just pass set()
     :return: the number of nodes for maxmimum indipendent forest
     """
-    print('F:', F)
+    if verbose: print('F:', F)
     ccs_nodes = list(nx.connected_components(G))  # preprocessing 1
     if len(ccs_nodes) > 1:
         result = set()
@@ -268,7 +268,7 @@ def find_v_case_9(G, neighbors_t: Set[N], nodes_gen_neigh_t: dict):
     raise Exception("V not found")
 
 
-def minimum_feedback_vertex_set(g: nx.Graph):
+def minimum_feedback_vertex_set(g: nx.Graph, verbose=False):
     """
     Calculate the size of the minimum feedback vertex set using SOTA algorithm
     with complexity O(1.7548^n) where n is the number of nodes of the graph
@@ -292,7 +292,7 @@ def minimum_feedback_vertex_set(g: nx.Graph):
     :param G: graph
     :return: the cardinality of minimal feedback vertex set
     """
-    return set(g.nodes) - mif(g, set())
+    return set(g.nodes) - mif(g, set(), t=None, verbose=verbose)
 
 
 if __name__ == '__main__':
