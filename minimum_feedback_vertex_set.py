@@ -107,7 +107,6 @@ def generalized_degree(G: nx.Graph, F: Set[N], t: N):
             if t in K: K.remove(t)
             K1 = K.copy()
             K1.add(v)
-            u = random.choice(list(K1))
             G_first = G.copy()
             G_first = id_(G_first, K1, v)
             gen_neighbors = list(G_first.neighbors(v))
@@ -117,7 +116,7 @@ def generalized_degree(G: nx.Graph, F: Set[N], t: N):
     return result
 
 
-def mif(G: nx.Graph, F: Set[N], verbose=False):
+def mif(G: nx.Graph, F: Set[N], t: N = None, verbose=False):
     """
     Calculate the size of the Maximal Indipendent Forest using SOTA algorithm
     with complexity O(1.7548^n) where n is the number of nodes of the graph
@@ -126,7 +125,7 @@ def mif(G: nx.Graph, F: Set[N], verbose=False):
 
     >>> n = 10
     >>> g = nx.Graph([(i%n, (i+1)%n) for i in range(n)])
-    >>> mif(g, set())
+    >>> len(mif(g, set()))
     9
 
 
@@ -134,28 +133,32 @@ def mif(G: nx.Graph, F: Set[N], verbose=False):
     :param F: The forest i.e. a set of nodes used for recursive calls. If you want to find the maximum indipendent forest just pass set()
     :return: the number of nodes for maxmimum indipendent forest
     """
+    print('F:', F)
     ccs_nodes = list(nx.connected_components(G))  # preprocessing 1
     if len(ccs_nodes) > 1:
         result = set()
         for cc_nodes in ccs_nodes:
             cc = G.subgraph(cc_nodes)
             F_i = F.intersection(cc_nodes)
-            result = result.union(mif(cc, F_i))
+            result = result.union(mif(cc, F_i, t))
         if verbose: print('returning', result)
         return result
     if not is_indipendent(G, F):  # preprocessing 2
         G1 = G.copy()
         for cc_nodes in nx.connected_components(G1.subgraph(F)):
             if cc_nodes and len(cc_nodes) > 1:  # i.e. is not trivial
-                v_t = random.choice(list(cc_nodes))
+                if t in cc_nodes:
+                    v_t = t
+                else:
+                    v_t = random.choice(list(cc_nodes))
                 G1 = id_star_(G1, cc_nodes, v_t)
                 break
         F1 = set(G1.nodes).intersection(F)
-        result = F.difference(F1)
-        result = mif(G1, F1) - result
+        cc_nodes.remove(v_t)
+        result = mif(G1, F1, t).union(cc_nodes)
         if verbose: print('p2 - returning', result)
         return result
-    if len(F) == len(G.nodes):  # case 1
+    if all(x in F for x in G.nodes):  # case 1
         if verbose: print('case 1')
         if verbose: print('returning', F)
         return F
@@ -172,8 +175,9 @@ def mif(G: nx.Graph, F: Set[N], verbose=False):
         G1 = G.copy()
         G1.remove_node(v)
         if verbose: print('case 3')
-        return max(mif(G, F1), mif(G1, F), key=len)
-    t = random.choice(list(F.intersection(G.nodes)))  # set active vertex
+        return max(mif(G, F1, t), mif(G1, F, t), key=len)
+    if t is None or t not in F:
+        t = random.choice(list(F.intersection(G.nodes)))  # set active vertex
     V_wo_F = set(G.nodes).difference(F)
     neighbors_t = set(G.neighbors(t))
     if V_wo_F == neighbors_t:
@@ -204,7 +208,7 @@ def mif(G: nx.Graph, F: Set[N], verbose=False):
         F1 = F.copy()
         F1.add(neigh_gen_degree_less_1)
         if verbose: print('case 6')
-        return mif(G, F1)
+        return mif(G, F1, t)
     del neigh_gen_degree_less_1
     if neigh_gen_degree_gr_4 is not None:  # case 7
         F1 = F.copy()
@@ -212,7 +216,7 @@ def mif(G: nx.Graph, F: Set[N], verbose=False):
         G1 = G.copy()
         G1.remove_node(neigh_gen_degree_gr_4)
         if verbose: print('case 7')
-        return max(mif(G, F1), mif(G1, F), key=len)
+        return max(mif(G, F1, t), mif(G1, F, t), key=len)
     del neigh_gen_degree_gr_4
     if neigh_gen_degree_eq_2:  # case 8
         w1, w2 = nodes_gen_neightbors[neigh_gen_degree_eq_2]
@@ -222,7 +226,11 @@ def mif(G: nx.Graph, F: Set[N], verbose=False):
         G1.remove_node(neigh_gen_degree_eq_2)
         F2 = F.copy()
         F2.add(w1); F2.add(w2)
-        return max(mif(G, F1), mif(G1, F2), key=len)
+        try:
+            nx.find_cycle(G.subgraph(F2))
+            return mif(G, F1, t)
+        except nx.NetworkXNoCycle:
+            return max(mif(G, F1, t), mif(G1, F2, t), key=len)
     v, w1, w2_w3 = find_v_case_9(G, neighbors_t, nodes_gen_neightbors)  # case 9
     F1 = F.copy();
     F1.add(v)
@@ -234,7 +242,7 @@ def mif(G: nx.Graph, F: Set[N], verbose=False):
     G2.subgraph([v, w1])
     F3 = F.copy();
     F3.update(w2_w3)
-    return max(mif(G, F1), mif(G1, F2), mif(G2, F3), key=len)
+    return max(mif(G, F1, t), mif(G1, F2, t), mif(G2, F3, t), key=len)
 
 
 def find_v_case_9(G, neighbors_t: Set[N], nodes_gen_neigh_t: dict):
@@ -258,13 +266,13 @@ def minimum_feedback_vertex_set(g: nx.Graph):
 
     >>> n = 10
     >>> g = nx.Graph([(i%n, (i+1)%n) for i in range(n)])
-    >>> minimum_feedback_vertex_set(g)
+    >>> len(minimum_feedback_vertex_set(g))
     1
     >>> g_complete = g.copy()
     >>> for u, v in combinations(g.nodes, 2):
     ...     if u != v and not g.has_edge(u, v):
     ...         g_complete.add_edge(u, v)
-    >>> minimum_feedback_vertex_set(g_complete)
+    >>> len(minimum_feedback_vertex_set(g_complete))
     8
 
 
