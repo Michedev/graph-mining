@@ -29,7 +29,7 @@ def solution3(g=None):
     if g is None:
         g = parse()
         print('Graph parsed')
-        sample_nodes = conditional_sample(g, 10, 0.5)
+        sample_nodes = conditional_sample(g, 28, 0.5)
         g = g.subgraph(sample_nodes).copy()
     nx.draw_networkx(g)
     plt.savefig('input_graph.png')
@@ -38,7 +38,7 @@ def solution3(g=None):
     fig, axs = plt.subplots(ncols=2, figsize=(14, 9))
     sol1 = MaximumInducedForest().get_fbvs(g.copy())
     sol = minimum_feedback_vertex_set(g.copy())
-    print('Minimum Feedback Vertex Set', (sol))
+    print('Minimum Feedback Vertex Set', sol)
     print('Github Minimum Feedback Vertex Set', sol1)
 
     for n in sol:
