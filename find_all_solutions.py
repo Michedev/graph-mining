@@ -8,6 +8,20 @@ from networkx.generators import circulant_graph, complete_graph
 from networkx import bfs_tree, dfs_tree
 
 
+def recursive_dfs(g, n, ancestors: list, h: int, max_depth: int):
+    solutions = []
+    if max_depth == h:
+        return tuple(ancestors)
+    for neigh in g.neighbors(n):
+        if neigh not in ancestors:
+            sol = recursive_dfs(g, neigh, ancestors + [neigh], h + 1, max_depth)
+            if isinstance(sol, tuple):
+                solutions.append(sol)
+            else:
+                solutions += sol
+    return solutions
+
+
 def find_solutions_dfs(dfs_tree, n, mif_size: int, ancestors=None):
     if ancestors is None:
         ancestors = []
@@ -22,19 +36,18 @@ def find_solutions_dfs(dfs_tree, n, mif_size: int, ancestors=None):
                 solutions.append(tuple(sorted(sol)))
     return solutions
 
+
 def find_other_minimal_solutions(g, mif_size: int):
-    solutions = list()
+    solutions = set()
     for n in g.nodes:
-        T = bfs_tree(g, n, depth_limit=mif_size)
-        T1 = dfs_tree(g, n, mif_size)
-        solutions += find_solutions_dfs(T, n, mif_size)
-        solutions += find_solutions_dfs(T1, n, mif_size)
-    return set(solutions)
+        solutions.update(recursive_dfs(g, n, [], 0, mif_size))
+    return solutions
+
 
 def main():
     show = False
     n = 10
-    g = networkx.Graph([(i%n, (i+1)%n) for i in range(n)])
+    g = networkx.Graph([(i % n, (i + 1) % n) for i in range(n)])
     if show:
         networkx.draw_networkx(g)
         plt.show()
@@ -42,6 +55,7 @@ def main():
     all_solutions = find_other_minimal_solutions(g, len(a_solution))
     # print('pairs', list(combinations(g.nodes, 2)))
     print('all solutions', all_solutions)
+
 
 if __name__ == '__main__':
     main()
