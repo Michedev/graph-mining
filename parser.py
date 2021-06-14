@@ -1,6 +1,8 @@
+import random
 from dataclasses import dataclass
 from itertools import chain
 import networkx
+import networkx as nx
 from path import Path
 import re
 import json
@@ -48,3 +50,23 @@ def parse():
 if __name__ == '__main__':
     graph = parse()
     print(get_graph_stats(graph))
+
+
+def conditional_sample(G: nx.Graph, n: int, p=0.3):
+    sample_nodes = list()
+    remaining = list(G.nodes)
+    for _ in range(n):
+        if random.random() > p:  # with probability (1 - p)
+            chosen = random.choice(remaining)
+        else:
+            chosen = None
+            for n in sample_nodes:
+                neighs_n_remaining = set(G.neighbors(n)).intersection(remaining)
+                neighs_n_remaining = list(neighs_n_remaining)
+                if len(neighs_n_remaining) > 0:
+                    chosen = random.choice(neighs_n_remaining)
+            if chosen is None:  # fall back to random choice
+                chosen = random.choice(remaining)
+        remaining.remove(chosen)
+        sample_nodes.append(chosen)
+    return sample_nodes
