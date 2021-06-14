@@ -36,8 +36,6 @@ def main():
     show = True
     # g = networkx.Graph([(i % n, (i + 1) % n) for i in range(n)])
     g = complete_graph(9)
-    # g.remove_edge(1,2)
-    g.remove_edge(0,3)
     n = len(g.nodes)
     g1 = networkx.Graph([(i+ n , (i + 1) % 4 + n) for i in range(4)])
     for e in g1.edges:
@@ -51,6 +49,19 @@ def main():
 
 
 def find_all_mif(g):
+    """
+    Find all Maximum Induced Forest i.e. the set of nodes such that G{MIF] doesn't contain a cycle
+    >>> g = complete_graph(20)
+    >>> g.remove_edge(0,3)
+    >>> solutions, cardinality = find_all_mif(g)
+    >>> cardinality
+    3
+    >>> all(0 in sol and 3 in sol for sol in solutions)
+    True
+
+    :param g: graph
+    :return: a set of all the MIF and the cardinality of MIF got from exponential algorithm
+    """
     a_solution = mif(networkx.MultiGraph(g.copy()), set(), t=None)
     all_solutions = find_other_mif(g, len(a_solution))
     return all_solutions, len(a_solution)
