@@ -167,7 +167,7 @@ def mif(G: nx.Graph, F: Set[N], t: N = None, verbose=False):
         cc_nodes.remove(v_t)
         if v_t in F:
             F.remove(v_t)
-        result = mif(G1, F1, t).union(cc_nodes).union(F)
+        result = mif(G1, F1, t).union(cc_nodes).union(F1)
         if verbose: print('p2 - returning', result)
         return result
     if all(x in F for x in G.nodes):  # case 1
