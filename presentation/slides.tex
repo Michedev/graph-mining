@@ -57,19 +57,19 @@
 		\begin{itemize}
 			\item The opposite problem is much harder and not trivial to be solved. Furthermore, it has many interesting applications, for instance deadlock solver in a concurrent environment like an OS or DB, chip design and so on.
 			\item The complexity of this problem is NP-hard therefore it can be solved in exponential time $O(2^n)$ using a brute force approach, where $ n $ is the number of nodes in G
-			\item In this project Minimal FVS is found through a SOTA algorithm \cite{formin} which have time complexity $ O(1.7548^n) $ by solving the dual problem called also Maximum Inducted Forest. It consists into finding $ X \subseteq V $ such that $ G\left[ X \right] $ doesn't have cycles and X is maximal. 
+			\item In this project Minimal FVS is found through a SOTA algorithm \cite{formin} which have time complexity $ O(1.7548^n) $ by solving the dual problem called Maximum Inducted Forest. It consists into finding $ X \subseteq V $ such that $ G\left[ X \right] $ doesn't have cycles and X is maximal. 
 			\item This algorithm can be applied only to undirected graphs, so from now on we assume that G is undirected
 		\end{itemize}
     \end{frame}
 	\begin{frame}{Algorithm for Maximum Inducted Forest}
 		\begin{itemize}
-			\item The algorithm \textit{mif} consists in a sequence of 11 rules where the i-th rule is applied iff all the previous rules are false. The objective of these rules is either return a solution or to branch the problem in sub-problems.
+			\item The algorithm \textit{find\_mif} consists in a sequence of 11 rules where the i-th rule is applied iff all the previous rules are false. The objective of these rules is either return a solution or to branch the problem in sub-problems.
 			\item The algorithm has two main elements:
 				\begin{itemize}
 					\item F is the set containing the Maximum Inducted Forest
 					\item \textit{t} is the active vertex. During the algorithm a neighbor of \textit{t} it's used to branch in many sub-problems.
 				\end{itemize}
-			\item For instance, the first rule is: \\ \,\, If G has multiple CC (Connected Components) then return: $$ \bigcup_{cc \in G} mif\left(cc, F \cap cc, t \right) $$
+			\item For instance, the first rule is: \\ \,\, If G has multiple CC (Connected Components) then return: $$ \bigcup_{cc \in G} find\_mif\left(cc, F \cap cc, t \right) $$
 			\item Once the Maximum Inducted Forest is found, just return V - MIF to get Minimal Feedback Vertex Set
 		\end{itemize}
 	\end{frame}
@@ -91,7 +91,7 @@
 				\item Get all CC
 				\item Run n DFS with $ max\_depth=|MIF| $, one for each node $ n_0 $ with slight modifications:
 				\begin{itemize}
-					\item If a neighbor of node n is already visited or would create a cycle go back
+					\item If a neighbor of node n is already visited or any edge of the neighbor make a cycle go back
 					\item If the DFS path reach depth $ |MIF| $ return it as MIF solution.
 					\item If doesn't exists a visitable neighbor but other CC aren't visited then continue in any node of any other CC
 				\end{itemize}
@@ -106,7 +106,7 @@
 				\item P contains a cycle: this is impossible because the algorithm prevents to go in already visited nodes
 				\item  P is not Maximal: This is impossible because the algorithm returns only path of length |MIF|
 			\end{itemize}
-			\item Computation cost of the algorithm: $$ O( \underbrace{1.75 ^ n}_{Find \, first \, MIF} + \underbrace{n \cdot m}_{DFSs}) \approxeq O(1.75^n) $$
+			\item Computation cost of the algorithm: $$ O( \underbrace{1.75 ^ n}_{Find \, first \, MIF} + \underbrace{n \cdot |MIF|}_{DFSs})  \approxeq O(1.75^n) $$
 			 In conclusion, the cost to find all all the solutions is approximately equal to the cost to find initially the cardinality of MIF
 			 \item This analysis assume that get all supersets of Minimals FVS is $ O(1) $ 
 		 	\end{itemize}
