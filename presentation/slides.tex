@@ -93,9 +93,10 @@
 				\begin{enumerate}
 					\item $ ancestors = ancestors \cup \left\{ n_0 \right\} $
 					\item \textit{if size(ancestors) = |MIF| then return ancestors}
-					\item let $ N = \left\{ n: n \in neighbors(G, n_0) \wedge \, !has\_cycle(G, ancestors \cup \left\{ n \right\}) \right\} $
+					\item let $ N = \left\{ n: n \in neighbors(G, n_0) \wedge \, ! \exists (n,v) \in E: \, v \in ancestors \right\} $
 					\item if $ N = \emptyset $ then $ N = \left\{ n \right\}  $ : $ n \in V \wedge n \notin ancestors \wedge \, ! has\_cycle(G, ancestors \cup \left\{ n \right\})$
 					\item if again $ N = \emptyset $ return solutions by recursive calls
+					\item for each $ n \in N $ calls recursively $ find\_mif \left( G, ancestors \cup \left\{ n \right\} \right) $
 					
 				\end{enumerate}
 				\item Return FVS solutions as V - MIF for each MIF got from the previous point
@@ -106,10 +107,10 @@
 		\begin{itemize}
 			\item Demonstration of correctness of DFS (For simplicity assume single CC): Assume for absurd that a path P got from DFS isn't a MIF. Then the cases are 2:
 			\begin{itemize}
-				\item P contains a cycle: this is impossible because the algorithm prevents to go in already visited nodes
+				\item P contains a cycle: this is impossible because the algorithm have a cycle detection procedure
 				\item  P is not Maximal: This is impossible because the algorithm returns only path of length |MIF|
 			\end{itemize}
-			\item Computation cost of the algorithm: $$ O( \underbrace{1.75 ^ n}_{Find \, first \, MIF} + \underbrace{n \cdot |MIF|}_{DFSs})  \approxeq O(1.75^n) $$
+			\item Computation cost of the algorithm: $$ O( \underbrace{1.75 ^ n}_{Find \, first \, MIF} + \underbrace{|V| \cdot |MIF|}_{DFSs} \underbrace{\left( |V| + |E|\right) }_{cycle detection})  \approxeq O(1.75^n + n^2) $$
 			 In conclusion, the cost to find all all the solutions is approximately equal to the cost to find initially the cardinality of MIF
 			 \item This analysis assume that get all supersets of Minimals FVS is $ O(1) $ 
 		 	\end{itemize}
