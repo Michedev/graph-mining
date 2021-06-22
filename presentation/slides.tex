@@ -90,11 +90,14 @@
 				\item Run algorithm to find a MIF (see Minimal FVS section)
 				\item Get all CC
 				\item Run n DFS with $ max\_depth=|MIF| $, one for each node $ n_0 $ with slight modifications:
-				\begin{itemize}
-					\item If a neighbor of node n is already visited or any edge of the neighbor make a cycle go back
-					\item If the DFS path reach depth $ |MIF| $ return it as MIF solution.
-					\item If doesn't exists a visitable neighbor but other CC aren't visited then continue in any node of any other CC
-				\end{itemize}
+				\begin{enumerate}
+					\item $ ancestors = ancestors \cup \left\{ n_0 \right\} $
+					\item \textit{if size(ancestors) = |MIF| then return ancestors}
+					\item let $ N = \left\{ n: n \in neighbors(G, n_0) \wedge \, !has\_cycle(G, ancestors \cup \left\{ n \right\}) \right\} $
+					\item if $ N = \emptyset $ then $ N = \left\{ n \right\}  $ : $ n \in V \wedge n \notin ancestors \wedge \, ! has\_cycle(G, ancestors \cup \left\{ n \right\})$
+					\item if again $ N = \emptyset $ return solutions by recursive calls
+					
+				\end{enumerate}
 				\item Return FVS solutions as V - MIF for each MIF got from the previous point
 			\end{enumerate}
 		\end{itemize}
