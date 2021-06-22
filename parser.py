@@ -43,7 +43,7 @@ def parse():
             num_map[n] = c
             c += 1
     edges = [(num_map[u], num_map[v]) for u, v in edges]
-    graph = networkx.MultiGraph(edges)
+    graph = networkx.Graph(edges)
     return graph
 
 
