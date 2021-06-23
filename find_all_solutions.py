@@ -1,4 +1,5 @@
-from itertools import chain
+from itertools import combinations, chain
+from typing import Set
 
 import matplotlib.pyplot as plt
 import networkx
@@ -39,30 +40,11 @@ def find_new_node(ancestors, g):
             return [x]
 
 
-def find_other_mif(g, mif_size: int):
+def find_other_mif(g, mif_size: int) -> Set[tuple]:
     solutions = set()
     for n in g.nodes:
         solutions.update(recursive_dfs(g, n, [n], mif_size))
     return solutions
-
-
-def main():
-    show = True
-    # g = networkx.Graph([(i % n, (i + 1) % n) for i in range(n)])
-    g = parse()
-    g_nodes = conditional_sample(g, n=10, p=0.6)
-    g = g.subgraph(g_nodes).copy()
-    g = networkx.relabel_nodes(g, {n: i for i, n in enumerate(g.nodes)})
-    print(type(g))
-    if show:
-        networkx.draw_networkx(g)
-        plt.show()
-    all_mif, card_solution = find_all_mif(g)
-    for sol in all_mif:
-        networkx.draw_networkx(g.subgraph(sol))
-        plt.show()
-    print('cardinality', card_solution)
-    print('#solutions =', len(all_mif), 'all solutions', all_mif)
 
 
 def find_all_mif(g):
@@ -96,6 +78,39 @@ def find_all_mif(g):
     a_solution = mif(networkx.MultiGraph(g.copy()), set(), t=None)
     all_solutions = find_other_mif(g, len(a_solution))
     return all_solutions, len(a_solution)
+
+
+def find_all_minimal_fvs(g):
+    mifs, cardinality = find_all_mif(g)
+    min_fvs = {tuple(sorted(set(g.nodes).difference(mif))) for mif in mifs}
+    return min_fvs, len(g.nodes) - cardinality
+
+
+def find_all_solutions_fvs(g):
+    mins_fvs, fvs_card = find_all_minimal_fvs(g)
+    all_solutions = mins_fvs.copy()
+    for min_fvs in mins_fvs:
+        v_minus_min_fvs = set(g.nodes).difference(min_fvs)
+        for k in range(1, len(v_minus_min_fvs)):
+            for s in combinations(v_minus_min_fvs, k):
+                all_solutions.add(tuple(sorted(chain(min_fvs, s))))
+    all_solutions.add(tuple(sorted(g.nodes)))
+    return all_solutions
+
+
+def main():
+    show = True
+    # g = networkx.Graph([(i % n, (i + 1) % n) for i in range(n)])
+    g = parse()
+    g_nodes = conditional_sample(g, n=10, p=0.6)
+    g = g.subgraph(g_nodes).copy()
+    g = networkx.relabel_nodes(g, {n: i for i, n in enumerate(g.nodes)})
+    print(type(g))
+    if show:
+        networkx.draw_networkx(g)
+        plt.show()
+    all_fvs = find_all_solutions_fvs(g)
+    print('#solutions =', len(all_fvs), 'all solutions', all_fvs)
 
 
 if __name__ == '__main__':
